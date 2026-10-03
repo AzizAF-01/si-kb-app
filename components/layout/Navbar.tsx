@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeartPulse, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/actions/auth";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export async function Navbar() {
   const supabase = await createClient();
@@ -61,11 +61,7 @@ export async function Navbar() {
                   {profile?.full_name || user.email?.split('@')[0]}
                 </span>
               </div>
-              <form action={signOut}>
-                <Button variant="outline" className="rounded-full px-6 border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
-                  Keluar
-                </Button>
-              </form>
+              <LogoutButton variant="outline" className="rounded-full px-6 border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors" />
             </div>
           ) : (
             <Link href="/login">

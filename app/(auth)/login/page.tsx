@@ -20,16 +20,33 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      setError(error.message);
+    if (authError) {
+      setError(authError.message);
       setLoading(false);
-    } else {
-      router.push("/");
+      return;
+    }
+
+    // Ambil role dari tabel profiles
+    if (authData.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authData.user.id)
+        .single();
+
+      if (profile?.role === "admin") {
+        router.push("/admin");
+      } else if (profile?.role === "bidan") {
+        router.push("/bidan");
+      } else {
+        router.push("/");
+      }
+      
       router.refresh();
     }
   };

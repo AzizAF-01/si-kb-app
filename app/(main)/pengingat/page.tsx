@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { ReminderForm } from "@/components/pengingat/ReminderForm";
-import { CalendarHeart, Pill, CalendarCheck, Users } from "lucide-react";
+import { CalendarHeart, Pill, CalendarCheck, Users, Lock } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +39,34 @@ export default async function PengingatPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    return (
+      <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-6xl">
+        <div className="max-w-2xl mb-12">
+          <p className="text-sm font-bold text-teal-600 tracking-widest uppercase mb-4">Pengingat</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
+            Jadwal KB Anda, tidak ada yang terlewat
+          </h1>
+          <p className="text-lg text-slate-600 leading-relaxed">
+            Tambahkan pengingat untuk suntik, minum pil, atau kunjungan ulang. SI-KB akan menyimpan jadwal dan membantu Anda mengingatnya.
+          </p>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 rounded-3xl p-12 text-center flex flex-col items-center">
+          <div className="bg-blue-100 p-4 rounded-full mb-6 text-blue-600">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Login Diperlukan</h2>
+          <p className="text-slate-600 max-w-md mx-auto mb-8">
+            Fitur pengingat merupakan layanan personal yang membutuhkan akun. Silakan masuk terlebih dahulu untuk mulai mengatur jadwal pengingat KB Anda.
+          </p>
+          <Link href="/login">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 font-bold rounded-lg transition-colors">
+              Masuk Sekarang
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   // Mengambil daftar pengingat yang belum selesai

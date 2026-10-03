@@ -61,7 +61,7 @@ export default function HomePage() {
             <div className="relative h-[400px] md:h-[500px] w-full rounded-3xl overflow-hidden shadow-xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
-                src="https://images.unsplash.com/photo-1542037104857-ffbb0b915525?q=80&w=800&auto=format&fit=crop" 
+                src="/images/happy_family.jpg" 
                 alt="Keluarga bahagia" 
                 className="absolute inset-0 w-full h-full object-cover"
               />
