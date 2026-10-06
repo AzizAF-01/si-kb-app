@@ -20,7 +20,7 @@ type Conversation = {
   };
 };
 
-export function BidanChatDashboard({ bidanId }: { bidanId: string }) {
+export function PerawatChatDashboard({ perawatId }: { perawatId: string }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -42,7 +42,7 @@ export function BidanChatDashboard({ bidanId }: { bidanId: string }) {
           profiles!conversations_user_id_fkey (full_name),
           messages!inner (id)
         `)
-        .eq("bidan_id", bidanId)
+        .eq("perawat_id", perawatId)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -118,7 +118,7 @@ export function BidanChatDashboard({ bidanId }: { bidanId: string }) {
 
     await supabase.from("messages").insert({
       conversation_id: activeConv,
-      sender_id: bidanId,
+      sender_id: perawatId,
       content: content,
     });
 
@@ -180,18 +180,18 @@ export function BidanChatDashboard({ bidanId }: { bidanId: string }) {
             {/* List Pesan */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
               {messages.map((msg) => {
-                const isBidan = msg.sender_id === bidanId;
+                const isPerawat = msg.sender_id === perawatId;
                 const time = new Date(msg.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
                 
                 return (
-                  <div key={msg.id} className={`flex ${isBidan ? "justify-end" : "justify-start"}`}>
+                  <div key={msg.id} className={`flex ${isPerawat ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[70%] rounded-2xl px-5 py-3 shadow-sm ${
-                      isBidan 
+                      isPerawat 
                         ? "bg-slate-900 text-white rounded-tr-sm" 
                         : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm"
                     }`}>
                       <p className="text-sm md:text-base leading-relaxed break-words">{msg.content}</p>
-                      <p className={`text-[10px] mt-2 text-right ${isBidan ? "text-slate-400" : "text-slate-400"}`}>
+                      <p className={`text-[10px] mt-2 text-right ${isPerawat ? "text-slate-400" : "text-slate-400"}`}>
                         {time}
                       </p>
                     </div>
@@ -207,7 +207,7 @@ export function BidanChatDashboard({ bidanId }: { bidanId: string }) {
                   type="text" 
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Ketik balasan bidan di sini..." 
+                  placeholder="Ketik balasan perawat di sini..." 
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />
                 <Button 

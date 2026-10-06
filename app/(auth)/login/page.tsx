@@ -41,8 +41,8 @@ export default function LoginPage() {
 
       if (profile?.role === "admin") {
         router.push("/admin");
-      } else if (profile?.role === "bidan") {
-        router.push("/bidan");
+      } else if (profile?.role === "perawat") {
+        router.push("/perawat");
       } else {
         router.push("/");
       }

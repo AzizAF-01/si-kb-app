@@ -24,7 +24,7 @@ export default function HomePage() {
             <p className="text-lg text-slate-600 leading-relaxed">
               SI-KB menemani keluarga Indonesia merencanakan masa depan dengan tenang: 
               belajar tentang KB, memilih kontrasepsi yang tepat, menemukan layanan terdekat, 
-              hingga bertanya langsung kepada bidan.
+              hingga bertanya langsung kepada perawat.
             </p>
             
             <div className="flex flex-wrap items-center gap-4 mt-2">
@@ -47,7 +47,7 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-blue-600" />
-                <span>Dampingan bidan</span>
+                <span>Dampingan perawat</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-blue-600" />
@@ -73,7 +73,7 @@ export default function HomePage() {
                 <MessageCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">Bidan Rina sedang online</p>
+                <p className="text-sm font-semibold text-slate-900">Perawat Rina sedang online</p>
               </div>
             </div>
 
@@ -116,7 +116,7 @@ export default function HomePage() {
           <FeatureCard 
             icon={<MapPin className="h-6 w-6 text-indigo-600" />}
             title="Jadwal Layanan"
-            description="Temukan Puskesmas, Posyandu, klinik, dan bidan terdekat."
+            description="Temukan Puskesmas, Posyandu, klinik, dan perawat terdekat."
             href="/jadwal-layanan"
           />
           <FeatureCard 
@@ -150,7 +150,7 @@ export default function HomePage() {
             <div className="flex flex-col justify-center">
               <p className="text-sm font-bold text-blue-200 tracking-widest uppercase mb-4">Kenapa SI-KB</p>
               <h2 className="text-4xl md:text-5xl font-bold leading-tight">
-                Ditemani dengan hangat, bukan dihakimi
+                di temani dengan hangat untuk pemilihan kontrasepsi yang tepat
               </h2>
             </div>
             
@@ -181,7 +181,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-1">Dekat dengan layanan nyata</h3>
-                  <p className="text-blue-100 text-sm leading-relaxed">Terhubung dengan Puskesmas, Posyandu, dan bidan di sekitar tempat tinggal Anda.</p>
+                  <p className="text-blue-100 text-sm leading-relaxed">Terhubung dengan Puskesmas, Posyandu, dan perawat di sekitar tempat tinggal Anda.</p>
                 </div>
               </div>
             </div>

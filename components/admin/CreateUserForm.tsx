@@ -31,7 +31,7 @@ export function CreateUserForm() {
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-2">
         <UserPlus className="h-5 w-5 text-slate-700" />
-        <h3 className="font-semibold text-slate-800">Tambah Akses Admin / Bidan</h3>
+        <h3 className="font-semibold text-slate-800">Tambah Akses Admin / Perawat</h3>
       </div>
       
       {message.text && (
@@ -49,7 +49,7 @@ export function CreateUserForm() {
             type="text" 
             name="name"
             required
-            placeholder="Bidan Sari" 
+            placeholder="Perawat Sari" 
             className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
           />
         </div>
@@ -84,7 +84,7 @@ export function CreateUserForm() {
             name="role"
             className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
           >
-            <option value="bidan">Bidan (Akses Panel Chat)</option>
+            <option value="perawat">Perawat (Akses Panel Chat)</option>
             <option value="admin">Admin (Akses Monitoring)</option>
             <option value="user">User Biasa</option>
           </select>

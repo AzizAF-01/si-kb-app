@@ -167,7 +167,7 @@ export function FacilityManagement({ initialFacilities }: { initialFacilities: a
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Fasilitas/Bidan</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Fasilitas/Perawat</label>
               <input 
                 type="text" 
                 value={name}
@@ -187,7 +187,7 @@ export function FacilityManagement({ initialFacilities }: { initialFacilities: a
                 <option value="puskesmas">Puskesmas</option>
                 <option value="posyandu">Posyandu</option>
                 <option value="klinik">Klinik</option>
-                <option value="bidan">Bidan Mandiri</option>
+                <option value="perawat">Perawat Mandiri</option>
               </select>
             </div>
           </div>

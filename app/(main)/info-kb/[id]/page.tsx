@@ -66,7 +66,7 @@ export default async function ArticleDetailPage({ params }: { params: Promise<{ 
       <div className="mt-16 pt-8 border-t border-slate-200">
         <div className="bg-slate-50 rounded-2xl p-8 text-center border border-slate-200">
           <h3 className="font-bold text-slate-900 text-xl mb-3">Punya pertanyaan lebih lanjut?</h3>
-          <p className="text-slate-600 mb-6">Bidan kami siap membantu Anda secara langsung via chat.</p>
+          <p className="text-slate-600 mb-6">Perawat kami siap membantu Anda secara langsung via chat.</p>
           <Link href="/konsultasi">
             <Button className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg px-8 py-3">
               Mulai Konsultasi Online

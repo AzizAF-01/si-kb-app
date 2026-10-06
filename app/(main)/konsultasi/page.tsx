@@ -13,10 +13,10 @@ export default async function KonsultasiPage() {
       <div className="max-w-2xl mb-12">
         <p className="text-sm font-bold text-teal-600 tracking-widest uppercase mb-4">Konsultasi</p>
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-          Pilih Bidan Kepercayaan Anda
+          Pilih Perawat Kepercayaan Anda
         </h1>
         <p className="text-lg text-slate-600 leading-relaxed">
-          Punya keluhan atau ragu memilih alat kontrasepsi? Pilih bidan dari daftar di bawah dan konsultasikan secara online tanpa harus pergi ke klinik.
+          Punya keluhan atau ragu memilih alat kontrasepsi? Pilih perawat dari daftar di bawah dan konsultasikan secara online tanpa harus pergi ke klinik.
         </p>
       </div>
 

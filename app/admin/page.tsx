@@ -21,7 +21,7 @@ export default async function TrueAdminPage() {
     <div className="space-y-6 max-w-5xl">
       <div className="pb-4 border-b border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Kelola Pengguna</h1>
-        <p className="text-sm text-slate-600">Pantau akun terdaftar dan kelola akses Bidan atau Admin.</p>
+        <p className="text-sm text-slate-600">Pantau akun terdaftar dan kelola akses Perawat atau Admin.</p>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -57,7 +57,7 @@ export default async function TrueAdminPage() {
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                         u.role === 'admin' ? 'bg-red-50 text-red-700 border-red-200' :
-                        u.role === 'bidan' ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                        u.role === 'perawat' ? 'bg-teal-50 text-teal-700 border-teal-200' :
                         'bg-slate-50 text-slate-700 border-slate-200'
                       }`}>
                         {u.role.toUpperCase()}

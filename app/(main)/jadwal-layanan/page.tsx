@@ -20,7 +20,7 @@ export default async function JadwalLayananPage() {
           Temukan layanan KB di dekat Anda
         </h1>
         <p className="text-lg text-slate-600 leading-relaxed">
-          Daftar Puskesmas, Posyandu, klinik, dan praktik bidan beserta alamat dan jam layanannya. Datang sesuai jadwal agar Anda dilayani dengan nyaman.
+          Daftar Puskesmas, Posyandu, klinik, dan praktik perawat beserta alamat dan jam layanannya. Datang sesuai jadwal agar Anda dilayani dengan nyaman.
         </p>
       </div>
 

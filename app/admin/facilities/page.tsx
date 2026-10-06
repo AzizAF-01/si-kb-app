@@ -20,7 +20,7 @@ export default async function AdminFacilitiesPage() {
     <div className="space-y-6 max-w-5xl">
       <div className="pb-4 border-b border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Jadwal & Fasilitas Layanan</h1>
-        <p className="text-sm text-slate-600">Kelola daftar puskesmas, klinik, posyandu, atau bidan yang muncul di halaman Jadwal Layanan pengguna.</p>
+        <p className="text-sm text-slate-600">Kelola daftar puskesmas, klinik, posyandu, atau perawat yang muncul di halaman Jadwal Layanan pengguna.</p>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

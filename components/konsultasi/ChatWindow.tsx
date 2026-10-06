@@ -94,7 +94,7 @@ export function ChatWindow({
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-3">
             <div className="bg-white p-4 rounded-full shadow-sm">👋</div>
-            <p className="text-sm">Mulai percakapan dengan Bidan sekarang.</p>
+            <p className="text-sm">Mulai percakapan dengan Perawat sekarang.</p>
           </div>
         ) : (
           messages.map((msg) => {

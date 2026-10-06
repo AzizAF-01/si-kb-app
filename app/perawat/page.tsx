@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { BidanChatDashboard } from "@/components/bidan/BidanChatDashboard";
+import { PerawatChatDashboard } from "@/components/perawat/PerawatChatDashboard";
 import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-export default async function BidanPage() {
+export default async function PerawatPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -12,5 +12,5 @@ export default async function BidanPage() {
     redirect("/login");
   }
 
-  return <BidanChatDashboard bidanId={user.id} />;
+  return <PerawatChatDashboard perawatId={user.id} />;
 }
