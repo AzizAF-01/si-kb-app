@@ -2,11 +2,14 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    # Berjalan setiap 3 hari sekali pukul 03:00 UTC (10:00 WIB)
+    # Berjalan OTOMATIS setiap 3 hari sekali pukul 03:00 UTC (10:00 WIB)
     # Supabase Free Tier melakukan auto-pause setelah 7 hari tanpa request.
     # Jadwal 3 hari ini memastikan database SI-KB tidak akan pernah mati/auto-pause.
     - cron: '0 3 */3 * *'
-  workflow_dispatch: # Mengaktifkan tombol "Run workflow" manual di tab Actions GitHub
+  push:
+    branches:
+      - main # Otomatis langsung berjalan saat ada push ke branch main
+  workflow_dispatch: # Pilihan manual tambahan (opsional)
 
 jobs:
   keep-alive:
