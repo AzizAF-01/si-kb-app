@@ -1,0 +1,32 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Berjalan setiap 3 hari sekali pukul 03:00 UTC (10:00 WIB)
+    # Supabase Free Tier melakukan auto-pause setelah 7 hari tanpa request.
+    # Jadwal 3 hari ini memastikan database SI-KB tidak akan pernah mati/auto-pause.
+    - cron: '0 3 */3 * *'
+  workflow_dispatch: # Mengaktifkan tombol "Run workflow" manual di tab Actions GitHub
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://rklylajusdnqrrtghtnh.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_IYto91kdijDeSf6Ng_olmg_ltqUs9P0' }}
+        run: |
+          echo "Mengirim ping ke Supabase untuk mencegah auto-pause..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/articles?limit=1&select=id")
+
+          echo "HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 206 ]; then
+            echo "SUKSES: Supabase aktif dan merespons dengan baik!"
+          else
+            echo "GAGAL: Supabase mengembalikan kode status $HTTP_STATUS"
+            exit 1
+          fi
