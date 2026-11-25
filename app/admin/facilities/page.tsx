@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { Building } from "lucide-react";
 import { FacilityManagement } from "@/components/admin/FacilityManagement";
 
@@ -7,10 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminFacilitiesPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
-
+  // Ambil data fasilitas (autentikasi & otorisasi role admin sudah divalidasi oleh layout)
   const { data: facilities } = await supabase
     .from("facilities")
     .select("*")

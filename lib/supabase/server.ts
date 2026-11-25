@@ -1,5 +1,6 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -27,3 +28,32 @@ export async function createClient() {
     }
   )
 }
+
+/**
+ * Deduplikasi pemanggilan auth.getUser() dalam satu siklus render RSC (React.cache).
+ * Menghindari roundtrip berulang ke endpoint Supabase Auth.
+ */
+export const getAuthenticatedUser = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) return null
+  return user
+})
+
+/**
+ * Deduplikasi pengambilan profil user yang sedang login.
+ */
+export const getCurrentProfile = cache(async () => {
+  const user = await getAuthenticatedUser()
+  if (!user) return null
+
+  const supabase = await createClient()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single()
+
+  return profile
+})
+

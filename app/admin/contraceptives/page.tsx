@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { Pill } from "lucide-react";
 import { ContraceptiveManagement } from "@/components/admin/ContraceptiveManagement";
 
@@ -7,11 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminContraceptivesPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
-
-  // Ambil semua data kontrasepsi dari tabel contraceptives
+  // Ambil semua data kontrasepsi (autentikasi & otorisasi role admin sudah divalidasi oleh layout)
   const { data: contraceptives, error } = await supabase
     .from("contraceptives")
     .select("*")

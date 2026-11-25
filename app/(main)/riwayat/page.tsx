@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { RiwayatForm } from "@/components/riwayat/RiwayatForm";
 import { RiwayatList } from "@/components/riwayat/RiwayatList";
 import { Circle, Lock } from "lucide-react";
@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 export const dynamic = 'force-dynamic';
 
 export default async function RiwayatPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const [user, supabase] = await Promise.all([
+    getAuthenticatedUser(),
+    createClient(),
+  ]);
 
   if (!user) {
     return (

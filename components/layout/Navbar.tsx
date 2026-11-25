@@ -1,25 +1,15 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeartPulse, User } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser, getCurrentProfile } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export async function Navbar() {
-  const supabase = await createClient();
-  
-  // Mengambil session user yang sedang login
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  let profile = null;
-  if (user) {
-    // Jika ada user, ambil nama lengkapnya dari tabel profiles
-    const { data } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .single();
-    profile = data;
-  }
+  // Menggunakan helper ter-cache (React.cache) agar tidak memicu query auth ganda
+  const [user, profile] = await Promise.all([
+    getAuthenticatedUser(),
+    getCurrentProfile(),
+  ]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">

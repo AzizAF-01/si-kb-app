@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { ReminderForm } from "@/components/pengingat/ReminderForm";
 import { CalendarHeart, Pill, CalendarCheck, Users, Lock } from "lucide-react";
 import Link from "next/link";
@@ -35,8 +35,10 @@ function getIconForCategory(category: string) {
 }
 
 export default async function PengingatPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const [user, supabase] = await Promise.all([
+    getAuthenticatedUser(),
+    createClient(),
+  ]);
 
   if (!user) {
     return (

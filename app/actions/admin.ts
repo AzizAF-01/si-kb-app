@@ -42,18 +42,15 @@ export async function createNewUser(formData: FormData) {
 
       if (authError) throw authError;
 
-      // Beri jeda 1 detik agar trigger Supabase selesai membuat profil
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       if (authData.user) {
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
-          .update({
+          .upsert({
+            id: authData.user.id,
             full_name: name,
             role: role,
             phone: phone,
-          })
-          .eq("id", authData.user.id);
+          }, { onConflict: "id" });
 
         if (profileError) throw profileError;
       }
@@ -69,18 +66,16 @@ export async function createNewUser(formData: FormData) {
 
       if (signUpError) throw signUpError;
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       if (signUpData.user) {
         const supabaseServer = await createServerClient();
         const { error: profileError } = await supabaseServer
           .from("profiles")
-          .update({
+          .upsert({
+            id: signUpData.user.id,
             full_name: name,
             role: role,
             phone: phone,
-          })
-          .eq("id", signUpData.user.id);
+          }, { onConflict: "id" });
 
         if (profileError) throw profileError;
       }

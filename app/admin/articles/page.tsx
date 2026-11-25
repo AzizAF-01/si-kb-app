@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { FileText } from "lucide-react";
 import { ArticleManagement } from "@/components/admin/ArticleManagement";
 
@@ -7,11 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminArticlesPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
-
-  // Ambil semua artikel
+  // Ambil semua artikel (autentikasi & otorisasi role admin sudah divalidasi oleh layout)
   const { data: articles } = await supabase
     .from("articles")
     .select("*")

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Users } from "lucide-react";
 import { UserManagement } from "@/components/admin/UserManagement";
@@ -6,8 +6,11 @@ import { UserManagement } from "@/components/admin/UserManagement";
 export const dynamic = 'force-dynamic';
 
 export default async function TrueAdminPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // getAuthenticatedUser menggunakan React.cache (0ms latensi tambahan dari layout)
+  const [user, supabase] = await Promise.all([
+    getAuthenticatedUser(),
+    createClient(),
+  ]);
 
   if (!user) redirect("/login");
 

@@ -1,23 +1,18 @@
 import Link from "next/link";
 import { HeartPulse } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser, getCurrentProfile } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export default async function PerawatLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  // Verifikasi role perawat
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // Verifikasi role perawat (otomatis ter-deduplikasi dengan React.cache)
+  const profile = await getCurrentProfile();
 
   if (profile?.role !== "perawat") {
     redirect("/"); // Tendang ke halaman utama jika bukan perawat
