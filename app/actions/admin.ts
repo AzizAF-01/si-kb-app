@@ -194,3 +194,132 @@ export async function saveContraceptiveHeader(header: {
     return { error: message };
   }
 }
+
+export async function saveArticleHeader(header: {
+  badge: string;
+  title: string;
+  description: string;
+}) {
+  const badge = header.badge?.trim() || "Info KB & Reproduksi";
+  const title = header.title?.trim() || "Pusat Edukasi Keluarga Berencana";
+  const description = header.description?.trim() || "";
+
+  const payload = {
+    title: "__HEADER_CONFIG__",
+    category: "__SYSTEM__",
+    content: JSON.stringify({ badge, title, description }),
+    image_url: "https://images.unsplash.com/photo-1584982751601-97d8cb0f6669?q=80&w=800&auto=format&fit=crop",
+  };
+
+  try {
+    const supabase = await createServerClient();
+
+    const { data: existing } = await supabase
+      .from("articles")
+      .select("id")
+      .eq("title", "__HEADER_CONFIG__")
+      .maybeSingle();
+
+    let error: { message: string } | null = null;
+    if (existing) {
+      const res = await supabase
+        .from("articles")
+        .update(payload)
+        .eq("id", existing.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("articles").insert(payload);
+      error = res.error;
+    }
+
+    if (error) {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const adminClient = getAdminClient();
+        if (existing) {
+          const res = await adminClient
+            .from("articles")
+            .update(payload)
+            .eq("id", existing.id);
+          if (res.error) throw res.error;
+        } else {
+          const res = await adminClient.from("articles").insert(payload);
+          if (res.error) throw res.error;
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    revalidatePath("/info-kb");
+    revalidatePath("/admin/articles");
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal menyimpan teks header artikel.";
+    return { error: message };
+  }
+}
+
+export async function saveFacilityHeader(header: {
+  badge: string;
+  title: string;
+  description: string;
+}) {
+  const badge = header.badge?.trim() || "Jadwal Layanan";
+  const title = header.title?.trim() || "Temukan layanan KB di dekat Anda";
+  const description = header.description?.trim() || "";
+
+  const payload = {
+    name: "__HEADER_CONFIG__",
+    type: "__SYSTEM__",
+    address: JSON.stringify({ badge, title, description }),
+    schedule: null,
+    services: [],
+  };
+
+  try {
+    const supabase = await createServerClient();
+
+    const { data: existing } = await supabase
+      .from("facilities")
+      .select("id")
+      .eq("name", "__HEADER_CONFIG__")
+      .maybeSingle();
+
+    let error: { message: string } | null = null;
+    if (existing) {
+      const res = await supabase
+        .from("facilities")
+        .update(payload)
+        .eq("id", existing.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("facilities").insert(payload);
+      error = res.error;
+    }
+
+    if (error) {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const adminClient = getAdminClient();
+        if (existing) {
+          const res = await adminClient
+            .from("facilities")
+            .update(payload)
+            .eq("id", existing.id);
+          if (res.error) throw res.error;
+        } else {
+          const res = await adminClient.from("facilities").insert(payload);
+          if (res.error) throw res.error;
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    revalidatePath("/jadwal-layanan");
+    revalidatePath("/admin/facilities");
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal menyimpan teks header jadwal layanan.";
+    return { error: message };
+  }
+}

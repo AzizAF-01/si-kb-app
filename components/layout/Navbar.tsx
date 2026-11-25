@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { HeartPulse, User } from "lucide-react";
 import { getAuthenticatedUser, getCurrentProfile } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { UserNav, MobileNav } from "@/components/layout/UserNav";
 
 export async function Navbar() {
   // Menggunakan helper ter-cache (React.cache) agar tidak memicu query auth ganda
@@ -21,45 +22,28 @@ export async function Navbar() {
           <span className="text-xl font-bold tracking-tight text-slate-900">SI-KB</span>
         </Link>
         
-        <nav className="hidden md:flex gap-6">
-          <Link href="/info-kb" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
-            Info KB
-          </Link>
-          <Link href="/kontrasepsi" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
-            Kontrasepsi
-          </Link>
-          <Link href="/jadwal-layanan" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
-            Jadwal
-          </Link>
-          <Link href="/konsultasi" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
-            Konsultasi
-          </Link>
-          <Link href="/pengingat" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
-            Pengingat
-          </Link>
-          <Link href="/riwayat" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
-            Riwayat
-          </Link>
-        </nav>
+        <UserNav />
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-4">
           {user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               <div className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-700 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                 <User className="h-4 w-4 text-slate-400" />
                 <span className="truncate max-w-[120px]">
                   {profile?.full_name || user.email?.split('@')[0]}
                 </span>
               </div>
-              <LogoutButton variant="outline" className="rounded-full px-6 border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors" />
+              <LogoutButton variant="outline" className="rounded-full px-5 md:px-6 border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors text-xs md:text-sm" />
             </div>
           ) : (
             <Link href="/login">
-              <Button variant="default" className="bg-blue-600 hover:bg-blue-700 rounded-full px-6 shadow-sm">
+              <Button variant="default" className="bg-blue-600 hover:bg-blue-700 rounded-full px-5 md:px-6 shadow-sm text-xs md:text-sm">
                 Masuk
               </Button>
             </Link>
           )}
+
+          <MobileNav />
         </div>
       </div>
     </header>

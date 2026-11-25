@@ -13,7 +13,16 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
   CheckCircle2,
+  FileText,
+  LayoutTemplate,
+  Check,
+  ExternalLink,
 } from "lucide-react";
+import {
+  ArticleHeaderConfig,
+  DEFAULT_ARTICLE_HEADER,
+} from "@/lib/article-header";
+import { saveArticleHeader } from "@/app/actions/admin";
 
 const DEFAULT_COVER_URL =
   "https://images.unsplash.com/photo-1584982751601-97d8cb0f6669?q=80&w=800&auto=format&fit=crop";
@@ -67,7 +76,37 @@ function compressImageToDataUrl(file: File, maxWidth = 1200, quality = 0.82): Pr
   });
 }
 
-export function ArticleManagement({ initialArticles }: { initialArticles: any[] }) {
+export function ArticleManagement({
+  initialArticles,
+  initialHeader,
+}: {
+  initialArticles: any[];
+  initialHeader?: ArticleHeaderConfig;
+}) {
+  // Tab Utama: "articles" | "header"
+  const [activeTab, setActiveTab] = useState<"articles" | "header">("articles");
+
+  // =========================================================
+  // STATE TAB HEADER HALAMAN INFO KB
+  // =========================================================
+  const [headerBadge, setHeaderBadge] = useState(
+    initialHeader?.badge || DEFAULT_ARTICLE_HEADER.badge
+  );
+  const [headerTitle, setHeaderTitle] = useState(
+    initialHeader?.title || DEFAULT_ARTICLE_HEADER.title
+  );
+  const [headerDescription, setHeaderDescription] = useState(
+    initialHeader?.description || DEFAULT_ARTICLE_HEADER.description
+  );
+  const [savingHeader, setSavingHeader] = useState(false);
+  const [headerMessage, setHeaderMessage] = useState<{
+    type: "success" | "error" | "";
+    text: string;
+  }>({ type: "", text: "" });
+
+  // =========================================================
+  // STATE ARTIKEL
+  // =========================================================
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Keluarga Berencana");
   const [content, setContent] = useState("");
@@ -231,317 +270,573 @@ export function ArticleManagement({ initialArticles }: { initialArticles: any[] 
     setLoading(false);
   };
 
+  // =========================================================
+  // HANDLER SIMPAN / RESET HEADER HALAMAN INFO KB
+  // =========================================================
+  const handleSaveHeader = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!headerTitle.trim()) {
+      alert("Judul utama halaman tidak boleh kosong.");
+      return;
+    }
+
+    setSavingHeader(true);
+    setHeaderMessage({ type: "", text: "" });
+
+    try {
+      const res = await saveArticleHeader({
+        badge: headerBadge,
+        title: headerTitle,
+        description: headerDescription,
+      });
+
+      if (res?.error) {
+        setHeaderMessage({ type: "error", text: res.error });
+      } else {
+        setHeaderMessage({
+          type: "success",
+          text: "Teks header halaman Info KB berhasil diperbarui!",
+        });
+        router.refresh();
+      }
+    } catch (err: unknown) {
+      setHeaderMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Gagal menyimpan perubahan header.",
+      });
+    } finally {
+      setSavingHeader(false);
+    }
+  };
+
+  const handleResetHeaderToDefault = () => {
+    if (!confirm("Kembalikan teks header ke susunan teks bawaan (default)?")) return;
+    setHeaderBadge(DEFAULT_ARTICLE_HEADER.badge);
+    setHeaderTitle(DEFAULT_ARTICLE_HEADER.title);
+    setHeaderDescription(DEFAULT_ARTICLE_HEADER.description);
+    setHeaderMessage({ type: "", text: "" });
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      {/* Daftar Artikel (Sebelah Kiri) */}
-      <div className="lg:col-span-5 space-y-3 max-h-[750px] overflow-y-auto pr-2">
-        {initialArticles?.length === 0 ? (
-          <div className="text-center p-8 border border-dashed border-slate-300 rounded-lg text-slate-500">
-            <p className="font-medium text-slate-700 mb-1">Belum ada artikel</p>
-            <p className="text-sm">Gunakan form di sebelah kanan untuk menulis.</p>
-          </div>
-        ) : (
-          initialArticles?.map((a: any) => (
-            <div
-              key={a.id}
-              className={`p-3.5 border rounded-xl flex gap-3.5 transition-colors ${
-                editingId === a.id
-                  ? "border-red-400 bg-red-50/30 ring-1 ring-red-400"
-                  : "border-slate-200 bg-white hover:border-slate-300"
-              }`}
-            >
-              {/* Thumbnail Cover Artikel */}
-              <div className="w-16 h-16 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                {a.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={a.image_url}
-                    alt={a.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-400">
-                    <ImageIcon className="h-5 w-5" />
-                  </div>
-                )}
-              </div>
+    <div className="space-y-6">
+      {/* Tab Navigation */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+          <button
+            type="button"
+            onClick={() => setActiveTab("articles")}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "articles"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <FileText className="h-4 w-4 text-red-600" />
+            <span>Daftar & Tulis Artikel</span>
+            <span className="ml-1 bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+              {initialArticles?.length || 0}
+            </span>
+          </button>
 
-              <div className="flex-1 flex flex-col min-w-0">
-                <h3 className="font-semibold text-slate-800 text-sm line-clamp-2 mb-2">
-                  {a.title}
-                </h3>
+          <button
+            type="button"
+            onClick={() => setActiveTab("header")}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "header"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <LayoutTemplate className="h-4 w-4 text-red-600" />
+            <span>Header Halaman Edukasi (Info KB)</span>
+          </button>
+        </div>
 
-                <div className="flex items-center justify-between mt-auto gap-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-medium bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-600 w-fit">
-                      {a.category}
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      {new Date(a.created_at).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClick(a)}
-                      className="h-7 px-2 text-xs text-slate-600 hover:text-slate-900 border-slate-200 hover:bg-slate-50"
-                    >
-                      <Edit className="h-3 w-3 mr-1" /> Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={deletingId === a.id}
-                      onClick={() => handleDeleteClick(a.id)}
-                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100"
-                    >
-                      {deletingId === a.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
+        {activeTab === "header" && (
+          <a
+            href="/info-kb"
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
+          >
+            Lihat Halaman Publik <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         )}
       </div>
 
-      {/* Form Tambah / Edit (Sebelah Kanan) */}
-      <div className="lg:col-span-7">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-5 relative sticky top-6"
-        >
-          {editingId && (
-            <div className="absolute top-5 right-5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={resetForm}
-                className="text-slate-500 hover:text-slate-800 hover:bg-slate-200 h-8"
-              >
-                <X className="h-4 w-4 mr-1.5" /> Batal Edit
-              </Button>
-            </div>
-          )}
-
-          <div>
-            <h3 className="font-semibold text-slate-900 text-lg">
-              {editingId ? "Edit Artikel" : "Tulis Artikel Baru"}
-            </h3>
-            <p className="text-sm text-slate-500 mt-1">
-              {editingId
-                ? "Perbarui informasi di bawah dan simpan."
-                : "Isi form ini untuk menerbitkan materi edukasi baru."}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Judul Artikel</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              placeholder="Contoh: Mitos & Fakta seputar Pil KB"
-              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Kategori</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-            >
-              <option value="Keluarga Berencana">Keluarga Berencana</option>
-              <option value="Kesehatan Ibu">Kesehatan Ibu</option>
-              <option value="Alat Kontrasepsi">Alat Kontrasepsi</option>
-              <option value="Gaya Hidup">Gaya Hidup</option>
-            </select>
-          </div>
-
-          {/* Bagian Gambar Cover: Bisa Upload File atau Input Link URL */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-600">
-                Gambar Cover Artikel
-              </label>
-
-              {/* Toggle Mode Upload vs Link URL */}
-              <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setImageInputMode("upload")}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                    imageInputMode === "upload"
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <Upload className="h-3 w-3" /> Upload Gambar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImageInputMode("url")}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                    imageInputMode === "url"
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <LinkIcon className="h-3 w-3" /> Link URL
-                </button>
+      {/* ========================================================= */}
+      {/* TAB 1: DAFTAR & FORM TULIS ARTIKEL */}
+      {/* ========================================================= */}
+      {activeTab === "articles" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Daftar Artikel (Sebelah Kiri) */}
+          <div className="lg:col-span-5 space-y-3 max-h-[750px] overflow-y-auto pr-2">
+            {initialArticles?.length === 0 ? (
+              <div className="text-center p-8 border border-dashed border-slate-300 rounded-lg text-slate-500">
+                <p className="font-medium text-slate-700 mb-1">Belum ada artikel</p>
+                <p className="text-sm">Gunakan form di sebelah kanan untuk menulis.</p>
               </div>
-            </div>
-
-            {imageInputMode === "upload" ? (
-              <div key="upload-mode-container" className="space-y-2">
-                <input
-                  key="file-upload-input"
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="article-cover-upload"
-                />
-                <label
-                  htmlFor="article-cover-upload"
-                  className={`flex flex-col items-center justify-center w-full p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
-                    uploadingImage
-                      ? "border-slate-300 bg-slate-100 cursor-wait"
-                      : "border-slate-300 bg-white hover:border-red-400 hover:bg-red-50/20"
+            ) : (
+              initialArticles?.map((a: any) => (
+                <div
+                  key={a.id}
+                  className={`p-3.5 border rounded-xl flex gap-3.5 transition-colors ${
+                    editingId === a.id
+                      ? "border-red-400 bg-red-50/30 ring-1 ring-red-400"
+                      : "border-slate-200 bg-white hover:border-slate-300"
                   }`}
                 >
-                  {uploadingImage ? (
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 py-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-red-600" />
-                      <span>Memproses gambar...</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center text-center py-1">
-                      <div className="p-2 rounded-full bg-red-50 text-red-600 mb-1.5">
-                        <Upload className="h-4 w-4" />
+                  {/* Thumbnail Cover Artikel */}
+                  <div className="w-16 h-16 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+                    {a.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={a.image_url}
+                        alt={a.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <ImageIcon className="h-5 w-5" />
                       </div>
-                      <p className="text-xs font-semibold text-slate-700">
-                        Klik untuk pilih gambar dari perangkat Anda
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Format: JPG, PNG, WEBP (Maks. 5MB)
-                      </p>
-                    </div>
-                  )}
-                </label>
+                    )}
+                  </div>
 
-                {uploadedFileName && (
-                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-xs">
-                    <span className="inline-flex items-center gap-1.5 font-medium truncate">
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                      File terpilih: {uploadedFileName}
-                    </span>
+                  <div className="flex-1 flex flex-col min-w-0">
+                    <h3 className="font-semibold text-slate-800 text-sm line-clamp-2 mb-2">
+                      {a.title}
+                    </h3>
+
+                    <div className="flex items-center justify-between mt-auto gap-2">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-medium bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-600 w-fit">
+                          {a.category}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {new Date(a.created_at).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditClick(a)}
+                          className="h-7 px-2 text-xs text-slate-600 hover:text-slate-900 border-slate-200 hover:bg-slate-50"
+                        >
+                          <Edit className="h-3 w-3 mr-1" /> Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={deletingId === a.id}
+                          onClick={() => handleDeleteClick(a.id)}
+                          className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100"
+                        >
+                          {deletingId === a.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Form Tambah / Edit (Sebelah Kanan) */}
+          <div className="lg:col-span-7">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-5 relative sticky top-6"
+            >
+              {editingId && (
+                <div className="absolute top-5 right-5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetForm}
+                    className="text-slate-500 hover:text-slate-800 hover:bg-slate-200 h-8"
+                  >
+                    <X className="h-4 w-4 mr-1.5" /> Batal Edit
+                  </Button>
+                </div>
+              )}
+
+              <div>
+                <h3 className="font-semibold text-slate-900 text-lg">
+                  {editingId ? "Edit Artikel" : "Tulis Artikel Baru"}
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  {editingId
+                    ? "Perbarui informasi di bawah dan simpan."
+                    : "Isi form ini untuk menerbitkan materi edukasi baru."}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Judul Artikel</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  placeholder="Contoh: Mitos & Fakta seputar Pil KB"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Kategori</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="Keluarga Berencana">Keluarga Berencana</option>
+                  <option value="Kesehatan Ibu">Kesehatan Ibu</option>
+                  <option value="Alat Kontrasepsi">Alat Kontrasepsi</option>
+                  <option value="Gaya Hidup">Gaya Hidup</option>
+                </select>
+              </div>
+
+              {/* Bagian Gambar Cover: Bisa Upload File atau Input Link URL */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Gambar Cover Artikel
+                  </label>
+
+                  {/* Toggle Mode Upload vs Link URL */}
+                  <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
                     <button
                       type="button"
-                      onClick={() => {
-                        setUploadedFileName(null);
-                        setImageUrl(DEFAULT_COVER_URL);
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                      }}
-                      className="text-emerald-700 hover:text-emerald-900 font-semibold ml-2 shrink-0"
+                      onClick={() => setImageInputMode("upload")}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                        imageInputMode === "upload"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
                     >
-                      Reset
+                      <Upload className="h-3 w-3" /> Upload Gambar
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageInputMode("url")}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                        imageInputMode === "url"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <LinkIcon className="h-3 w-3" /> Link URL
+                    </button>
+                  </div>
+                </div>
+
+                {imageInputMode === "upload" ? (
+                  <div key="upload-mode-container" className="space-y-2">
+                    <input
+                      key="file-upload-input"
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="article-cover-upload"
+                    />
+                    <label
+                      htmlFor="article-cover-upload"
+                      className={`flex flex-col items-center justify-center w-full p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                        uploadingImage
+                          ? "border-slate-300 bg-slate-100 cursor-wait"
+                          : "border-slate-300 bg-white hover:border-red-400 hover:bg-red-50/20"
+                      }`}
+                    >
+                      {uploadingImage ? (
+                        <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 py-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                          <span>Memproses gambar...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center text-center py-1">
+                          <div className="p-2 rounded-full bg-red-50 text-red-600 mb-1.5">
+                            <Upload className="h-4 w-4" />
+                          </div>
+                          <p className="text-xs font-semibold text-slate-700">
+                            Klik untuk pilih gambar dari perangkat Anda
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Format: JPG, PNG, WEBP (Maks. 5MB)
+                          </p>
+                        </div>
+                      )}
+                    </label>
+
+                    {uploadedFileName && (
+                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-xs">
+                        <span className="inline-flex items-center gap-1.5 font-medium truncate">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                          File terpilih: {uploadedFileName}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUploadedFileName(null);
+                            setImageUrl(DEFAULT_COVER_URL);
+                            if (fileInputRef.current) fileInputRef.current.value = "";
+                          }}
+                          className="text-emerald-700 hover:text-emerald-900 font-semibold ml-2 shrink-0"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div key="url-mode-container">
+                    <input
+                      key="url-text-input"
+                      type="text"
+                      value={
+                        typeof imageUrl === "string" && !imageUrl.startsWith("data:image/")
+                          ? imageUrl
+                          : ""
+                      }
+                      onChange={(e) => {
+                        setImageUrl(e.target.value ?? "");
+                        setUploadedFileName(null);
+                      }}
+                      placeholder="https://example.com/gambar-artikel.jpg"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Masukkan tautan langsung (direct link) ke file gambar.
+                    </p>
+                  </div>
+                )}
+
+                {/* Preview Gambar Cover */}
+                {imageUrl && (
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3">
+                    <div className="w-20 h-14 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageUrl}
+                        alt="Preview cover"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-slate-700">Preview Gambar Cover</p>
+                      <p className="text-[11px] text-slate-400 truncate">
+                        {imageUrl.startsWith("data:image/")
+                          ? "Gambar hasil upload perangkat"
+                          : imageUrl}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
-            ) : (
-              <div key="url-mode-container">
-                <input
-                  key="url-text-input"
-                  type="text"
-                  value={
-                    typeof imageUrl === "string" && !imageUrl.startsWith("data:image/")
-                      ? imageUrl
-                      : ""
-                  }
-                  onChange={(e) => {
-                    setImageUrl(e.target.value ?? "");
-                    setUploadedFileName(null);
-                  }}
-                  placeholder="https://example.com/gambar-artikel.jpg"
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Masukkan tautan langsung (direct link) ke file gambar.
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Konten Utama</label>
+                <textarea
+                  rows={10}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  required
+                  placeholder="Tuliskan isi artikel Anda di sini..."
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-y"
+                ></textarea>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={loading || uploadingImage}
+                  className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-8 py-2 font-semibold transition-colors"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {loading
+                    ? "Menyimpan..."
+                    : editingId
+                    ? "Simpan Perubahan"
+                    : "Publikasikan Artikel"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* TAB 2: EDIT HEADER HALAMAN EDUKASI (INFO KB) */}
+      {/* ========================================================= */}
+      {activeTab === "header" && (
+        <div className="space-y-6">
+          {headerMessage.text && (
+            <div
+              className={`p-4 rounded-xl text-sm flex items-center justify-between border ${
+                headerMessage.type === "success"
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                  : "bg-red-50 text-red-800 border-red-200"
+              }`}
+            >
+              <span>{headerMessage.text}</span>
+              <button
+                type="button"
+                onClick={() => setHeaderMessage({ type: "", text: "" })}
+                className="text-xs font-bold underline ml-3"
+              >
+                Tutup
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Form Editor Header (Kiri: 7 Kolom) */}
+            <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Pengaturan Header Halaman Info KB
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Sesuaikan teks badge, judul utama, dan paragraf pengantar edukasi yang ditampilkan di halaman publik Info KB.
                 </p>
               </div>
-            )}
 
-            {/* Preview Gambar Cover */}
-            {imageUrl && (
-              <div className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3">
-                <div className="w-20 h-14 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={imageUrl}
-                    alt="Preview cover"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
+              <form onSubmit={handleSaveHeader} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Teks Badge / Kategori Kecil
+                  </label>
+                  <input
+                    type="text"
+                    value={headerBadge}
+                    onChange={(e) => setHeaderBadge(e.target.value)}
+                    placeholder="Contoh: Info KB & Reproduksi"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
                   />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-slate-700">Preview Gambar Cover</p>
-                  <p className="text-[11px] text-slate-400 truncate">
-                    {imageUrl.startsWith("data:image/")
-                      ? "Gambar hasil upload perangkat"
-                      : imageUrl}
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Label kecil di atas judul utama halaman.
                   </p>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Judul Utama Halaman <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={headerTitle}
+                    onChange={(e) => setHeaderTitle(e.target.value)}
+                    required
+                    placeholder="Contoh: Pusat Edukasi Keluarga Berencana"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 font-semibold text-slate-900"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Headline berukuran besar yang langsung dilihat masyarakat saat membuka halaman Info KB.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Deskripsi / Teks Pengantar Edukasi <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={headerDescription}
+                    onChange={(e) => setHeaderDescription(e.target.value)}
+                    required
+                    placeholder="Tuliskan teks edukasi pengantar..."
+                    className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 leading-relaxed text-slate-700"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Paragraf pengantar yang menjelaskan materi informasi kesehatan reproduksi dan perencanaan keluarga.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResetHeaderToDefault}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 text-xs px-4"
+                  >
+                    Batal / Reset
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={savingHeader}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-6 shadow-sm"
+                  >
+                    {savingHeader ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                    ) : (
+                      <Check className="h-4 w-4 mr-1.5" />
+                    )}
+                    {savingHeader ? "Menyimpan..." : "Simpan Perubahan Header"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            {/* Pratinjau Tampilan Publik (Kanan: 5 Kolom) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Pratinjau Langsung
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold bg-red-50 text-red-600 px-2 py-0.5 rounded-full border border-red-100">
+                    Tampilan Publik (/info-kb)
+                  </span>
+                </div>
+
+                {/* Simulasi Tampilan Persis Halaman Publik */}
+                <div className="p-5 bg-gradient-to-b from-slate-50/80 to-white rounded-xl border border-slate-100">
+                  <p className="text-xs font-bold text-red-500 tracking-widest uppercase mb-3">
+                    {headerBadge || "INFO KB & REPRODUKSI"}
+                  </p>
+                  <h3 className="text-2xl font-extrabold text-slate-900 mb-3 leading-tight">
+                    {headerTitle || "Pusat Edukasi Keluarga Berencana"}
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {headerDescription || "Dapatkan informasi terpercaya seputar kesehatan reproduksi, metode kontrasepsi, dan perencanaan keluarga dari pakarnya."}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <span>Hasil perubahan tersimpan permanen di database.</span>
+                  <a
+                    href="/info-kb"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-red-600 hover:text-red-700"
+                  >
+                    Buka Tab Baru <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
               </div>
-            )}
+            </div>
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Konten Utama</label>
-            <textarea
-              rows={10}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
-              placeholder="Tuliskan isi artikel Anda di sini..."
-              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-y"
-            ></textarea>
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <Button
-              type="submit"
-              disabled={loading || uploadingImage}
-              className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-8 py-2 font-semibold transition-colors"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {loading
-                ? "Menyimpan..."
-                : editingId
-                ? "Simpan Perubahan"
-                : "Publikasikan Artikel"}
-            </Button>
-          </div>
-        </form>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

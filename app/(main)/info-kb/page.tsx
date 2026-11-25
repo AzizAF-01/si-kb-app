@@ -2,32 +2,38 @@ import { createClient } from "@/lib/supabase/server";
 import { BookOpen, Search, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { extractArticleHeader } from "@/lib/article-header";
 
 export const dynamic = 'force-dynamic';
 
 export default async function InfoKBPage() {
   const supabase = await createClient();
   
-  const { data: articles } = await supabase
+  const { data: articlesData } = await supabase
     .from("articles")
     .select("*")
     .order("created_at", { ascending: false });
 
+  // Ekstrak teks header edukasi dinamis & saring agar baris konfigurasi tidak bercampur
+  const { header: headerConfig, cleanedRows: articles } = extractArticleHeader(articlesData || []);
+
   // Filter kategori
-  const kbArticles = articles?.filter(a => a.category === "Keluarga Berencana" || a.category === "Alat Kontrasepsi") || [];
-  const kesehatanArticles = articles?.filter(a => a.category === "Kesehatan Ibu" || a.category === "Gaya Hidup") || [];
+  const kbArticles = articles.filter(a => a.category === "Keluarga Berencana" || a.category === "Alat Kontrasepsi");
+  const kesehatanArticles = articles.filter(a => a.category === "Kesehatan Ibu" || a.category === "Gaya Hidup");
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-6xl">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
         <div className="max-w-2xl">
-          <p className="text-sm font-bold text-red-500 tracking-widest uppercase mb-4">Info KB & Reproduksi</p>
+          <p className="text-sm font-bold text-red-500 tracking-widest uppercase mb-4">
+            {headerConfig.badge}
+          </p>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-            Pusat Edukasi Keluarga Berencana
+            {headerConfig.title}
           </h1>
-          <p className="text-lg text-slate-600 leading-relaxed">
-            Dapatkan informasi terpercaya seputar kesehatan reproduksi, metode kontrasepsi, dan perencanaan keluarga dari pakarnya.
+          <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-line">
+            {headerConfig.description}
           </p>
         </div>
         
@@ -42,7 +48,7 @@ export default async function InfoKBPage() {
         </div>
       </div>
 
-      {articles?.length === 0 && (
+      {articles.length === 0 && (
         <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-100">
           <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500 font-medium">Belum ada artikel edukasi.</p>

@@ -1,5 +1,6 @@
 import { Building, MapPin, Clock, Stethoscope } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { extractFacilityHeader } from "@/lib/facility-header";
 
 export const dynamic = 'force-dynamic';
 
@@ -7,20 +8,25 @@ export default async function JadwalLayananPage() {
   const supabase = await createClient();
   
   // Mengambil data fasilitas dari tabel 'facilities' di Supabase
-  const { data: facilities, error } = await supabase
+  const { data: facilitiesData, error } = await supabase
     .from("facilities")
     .select("*")
     .order("name", { ascending: true });
 
+  // Ekstrak teks header jadwal layanan dinamis & saring baris konfigurasi
+  const { header: headerConfig, cleanedRows: facilities } = extractFacilityHeader(facilitiesData || []);
+
   return (
     <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-6xl">
       <div className="max-w-2xl mb-12">
-        <p className="text-sm font-bold text-teal-600 tracking-widest uppercase mb-4">Jadwal Layanan</p>
+        <p className="text-sm font-bold text-teal-600 tracking-widest uppercase mb-4">
+          {headerConfig.badge}
+        </p>
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-          Temukan layanan KB di dekat Anda
+          {headerConfig.title}
         </h1>
-        <p className="text-lg text-slate-600 leading-relaxed">
-          Daftar Puskesmas, Posyandu, klinik, dan praktik perawat beserta alamat dan jam layanannya. Datang sesuai jadwal agar Anda dilayani dengan nyaman.
+        <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-line">
+          {headerConfig.description}
         </p>
       </div>
 
@@ -30,7 +36,7 @@ export default async function JadwalLayananPage() {
         </div>
       )}
 
-      {!facilities || facilities.length === 0 ? (
+      {facilities.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-3xl">
           <p className="text-slate-500">Belum ada data fasilitas layanan yang tersedia.</p>
         </div>

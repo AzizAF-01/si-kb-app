@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Building } from "lucide-react";
 import { FacilityManagement } from "@/components/admin/FacilityManagement";
+import { extractFacilityHeader } from "@/lib/facility-header";
 
 export const dynamic = 'force-dynamic';
 
@@ -8,16 +9,19 @@ export default async function AdminFacilitiesPage() {
   const supabase = await createClient();
 
   // Ambil data fasilitas (autentikasi & otorisasi role admin sudah divalidasi oleh layout)
-  const { data: facilities } = await supabase
+  const { data: facilitiesData } = await supabase
     .from("facilities")
     .select("*")
     .order("name", { ascending: true });
+
+  // Ekstrak header config dan saring data sistem
+  const { header, cleanedRows } = extractFacilityHeader(facilitiesData || []);
 
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="pb-4 border-b border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Jadwal & Fasilitas Layanan</h1>
-        <p className="text-sm text-slate-600">Kelola daftar puskesmas, klinik, posyandu, atau perawat yang muncul di halaman Jadwal Layanan pengguna.</p>
+        <p className="text-sm text-slate-600">Kelola daftar puskesmas, klinik, posyandu, atau perawat serta sesuaikan teks header halaman Jadwal Layanan publik.</p>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -26,7 +30,7 @@ export default async function AdminFacilitiesPage() {
           <h2 className="font-semibold text-slate-800">Manajemen Fasilitas</h2>
         </div>
         <div className="p-6">
-          <FacilityManagement initialFacilities={facilities || []} />
+          <FacilityManagement initialFacilities={cleanedRows} initialHeader={header} />
         </div>
       </div>
     </div>
