@@ -7,6 +7,7 @@ import {
   getIconOption,
   parseCategoryField,
 } from "@/lib/contraceptive-icons";
+import { extractContraceptiveHeader } from "@/lib/contraceptive-header";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,12 @@ export default async function KontrasepsiPage() {
     .select("*")
     .order("name", { ascending: true });
 
-  const contraceptives: ContraceptiveRow[] = contraceptivesData || [];
+  // Ekstrak teks header edukasi dinamis & saring agar baris konfigurasi tidak masuk ke daftar metode
+  const { header: headerConfig, cleanedRows } = extractContraceptiveHeader<ContraceptiveRow>(
+    contraceptivesData || []
+  );
+
+  const contraceptives: ContraceptiveRow[] = cleanedRows;
 
   // Kumpulkan kategori unik beserta iconId yang dikonfigurasi dari database
   const categoryIconMap: Record<string, CategoryIconId> = {};
@@ -61,12 +67,14 @@ export default async function KontrasepsiPage() {
   return (
     <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-6xl">
       <div className="max-w-2xl mb-16">
-        <p className="text-sm font-bold text-blue-600 tracking-widest uppercase mb-4">Info Kontrasepsi</p>
+        <p className="text-sm font-bold text-blue-600 tracking-widest uppercase mb-4">
+          {headerConfig.badge}
+        </p>
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-          Kenali pilihan kontrasepsi Anda
+          {headerConfig.title}
         </h1>
-        <p className="text-lg text-slate-600">
-          Setiap metode punya cara kerja dan kelebihan masing-masing. Pelajari perbedaannya, lalu diskusikan dengan tenaga kesehatan untuk memilih yang paling cocok.
+        <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-line">
+          {headerConfig.description}
         </p>
       </div>
 

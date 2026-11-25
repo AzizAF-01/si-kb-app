@@ -20,6 +20,9 @@ import {
   Check,
   FolderPlus,
   Upload,
+  LayoutTemplate,
+  RotateCcw,
+  ExternalLink,
 } from "lucide-react";
 import {
   CATEGORY_ICON_OPTIONS,
@@ -32,6 +35,11 @@ import {
   isCustomImageIcon,
   parseCategoryField,
 } from "@/lib/contraceptive-icons";
+import {
+  ContraceptiveHeaderConfig,
+  DEFAULT_CONTRACEPTIVE_HEADER,
+} from "@/lib/contraceptive-header";
+import { saveContraceptiveHeader } from "@/app/actions/admin";
 
 export interface ContraceptiveItem {
   id: string;
@@ -105,11 +113,31 @@ function compressIconImageToDataUrl(file: File, maxSize = 128): Promise<string> 
 
 export function ContraceptiveManagement({
   initialContraceptives,
+  initialHeader,
 }: {
   initialContraceptives: ContraceptiveItem[];
+  initialHeader?: ContraceptiveHeaderConfig;
 }) {
-  // Tab Utama: "items" (Metode Kontrasepsi) | "categories" (Kelompok Kategori)
-  const [activeTab, setActiveTab] = useState<"items" | "categories">("items");
+  // Tab Utama: "items" (Metode Kontrasepsi) | "categories" (Kelompok Kategori) | "header" (Header Halaman Edukasi)
+  const [activeTab, setActiveTab] = useState<"items" | "categories" | "header">("items");
+
+  // =========================================================
+  // STATE TAB 3: Header Halaman Edukasi
+  // =========================================================
+  const [headerBadge, setHeaderBadge] = useState(
+    initialHeader?.badge || DEFAULT_CONTRACEPTIVE_HEADER.badge
+  );
+  const [headerTitle, setHeaderTitle] = useState(
+    initialHeader?.title || DEFAULT_CONTRACEPTIVE_HEADER.title
+  );
+  const [headerDescription, setHeaderDescription] = useState(
+    initialHeader?.description || DEFAULT_CONTRACEPTIVE_HEADER.description
+  );
+  const [savingHeader, setSavingHeader] = useState(false);
+  const [headerMessage, setHeaderMessage] = useState<{
+    type: "success" | "error" | "";
+    text: string;
+  }>({ type: "", text: "" });
 
   const [selectedFilter, setSelectedFilter] = useState<string>("Semua");
 
@@ -526,6 +554,53 @@ export function ContraceptiveManagement({
     persistCategoriesToLocal(nextCats, nextIcons);
   };
 
+  // =========================================================
+  // HANDLER TAB 3: Simpan / Reset Header Halaman Edukasi
+  // =========================================================
+  const handleSaveHeader = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!headerTitle.trim()) {
+      alert("Judul utama halaman tidak boleh kosong.");
+      return;
+    }
+
+    setSavingHeader(true);
+    setHeaderMessage({ type: "", text: "" });
+
+    try {
+      const res = await saveContraceptiveHeader({
+        badge: headerBadge,
+        title: headerTitle,
+        description: headerDescription,
+      });
+
+      if (res?.error) {
+        setHeaderMessage({ type: "error", text: res.error });
+      } else {
+        setHeaderMessage({
+          type: "success",
+          text: "Teks header halaman edukasi kontrasepsi berhasil diperbarui!",
+        });
+        router.refresh();
+      }
+    } catch (err: unknown) {
+      setHeaderMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Gagal menyimpan perubahan header.",
+      });
+    } finally {
+      setSavingHeader(false);
+    }
+  };
+
+  const handleResetHeaderToDefault = () => {
+    if (!confirm("Kembalikan teks header ke susunan teks bawaan (default)?")) return;
+    setHeaderBadge(DEFAULT_CONTRACEPTIVE_HEADER.badge);
+    setHeaderTitle(DEFAULT_CONTRACEPTIVE_HEADER.title);
+    setHeaderDescription(DEFAULT_CONTRACEPTIVE_HEADER.description);
+    setHeaderMessage({ type: "", text: "" });
+  };
+
   const filteredItems = initialContraceptives.filter((item) => {
     if (selectedFilter === "Semua") return true;
     const parsed = parseCategoryField(item.category, item.category_icon);
@@ -575,6 +650,19 @@ export function ContraceptiveManagement({
               {availableCategories.length}
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("header")}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "header"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <LayoutTemplate className="h-4 w-4 text-blue-600" />
+            <span>Header Halaman Edukasi</span>
+          </button>
         </div>
 
         {/* Tombol Utama sesuai Tab yang Aktif */}
@@ -597,23 +685,34 @@ export function ContraceptiveManagement({
               <X className="h-4 w-4 mr-1.5" /> Tutup Form
             </Button>
           )
-        ) : !isCategoryFormOpen ? (
-          <Button
-            type="button"
-            onClick={handleOpenAddCategoryForm}
-            className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-xs font-semibold shadow-sm"
-          >
-            <FolderPlus className="h-4 w-4 mr-1.5" /> Tambah Kelompok Kategori
-          </Button>
+        ) : activeTab === "categories" ? (
+          !isCategoryFormOpen ? (
+            <Button
+              type="button"
+              onClick={handleOpenAddCategoryForm}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-xs font-semibold shadow-sm"
+            >
+              <FolderPlus className="h-4 w-4 mr-1.5" /> Tambah Kelompok Kategori
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseCategoryForm}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg px-4 py-2 text-xs font-semibold"
+            >
+              <X className="h-4 w-4 mr-1.5" /> Tutup Form
+            </Button>
+          )
         ) : (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCloseCategoryForm}
-            className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg px-4 py-2 text-xs font-semibold"
+          <a
+            href="/kontrasepsi"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm"
           >
-            <X className="h-4 w-4 mr-1.5" /> Tutup Form
-          </Button>
+            <ExternalLink className="h-3.5 w-3.5 text-slate-500" /> Lihat Halaman Publik
+          </a>
         )}
       </div>
 
@@ -1250,6 +1349,186 @@ export function ContraceptiveManagement({
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* TAB 3: HEADER & TEKS HALAMAN EDUKASI                                   */}
+      {/* ===================================================================== */}
+      {activeTab === "header" && (
+        <div className="space-y-6">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <LayoutTemplate className="h-5 w-5 text-blue-600" />
+                <h3 className="font-bold text-slate-900 text-base">
+                  Pengaturan Header Halaman Info Kontrasepsi
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                Sesuaikan label kategori, judul utama, dan kalimat pengantar edukasi yang tampil di bagian paling atas halaman publik <code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 text-blue-600 font-mono">/kontrasepsi</code>.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleResetHeaderToDefault}
+              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-100 text-xs shrink-0"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5 text-slate-500" /> Reset ke Teks Bawaan
+            </Button>
+          </div>
+
+          {headerMessage.text && (
+            <div
+              className={`p-4 rounded-xl text-xs font-semibold border flex items-center justify-between ${
+                headerMessage.type === "error"
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
+              }`}
+            >
+              <span>{headerMessage.text}</span>
+              <button
+                type="button"
+                onClick={() => setHeaderMessage({ type: "", text: "" })}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Formulir Pengeditan (Kiri: 7 Kolom) */}
+            <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+              <div className="border-b border-slate-100 pb-3">
+                <h4 className="font-bold text-slate-900 text-sm">Formulir Teks Header</h4>
+                <p className="text-xs text-slate-500">
+                  Ubah bidang di bawah ini, pratinjau akan langsung diperbarui secara realtime di sebelah kanan.
+                </p>
+              </div>
+
+              <form onSubmit={handleSaveHeader} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Label Sub-judul / Badge <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={headerBadge}
+                    onChange={(e) => setHeaderBadge(e.target.value)}
+                    required
+                    placeholder="Contoh: Info Kontrasepsi"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Label kecil berwarna biru berhuruf kapital di atas judul utama.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Judul Utama Halaman <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={headerTitle}
+                    onChange={(e) => setHeaderTitle(e.target.value)}
+                    required
+                    placeholder="Contoh: Kenali pilihan kontrasepsi Anda"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Headline berukuran besar yang langsung dilihat masyarakat saat membuka halaman.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Deskripsi / Teks Pengantar Edukasi <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={headerDescription}
+                    onChange={(e) => setHeaderDescription(e.target.value)}
+                    required
+                    placeholder="Tuliskan teks edukasi pengantar..."
+                    className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 leading-relaxed text-slate-700"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Paragraf pengantar yang menjelaskan pentingnya memilih kontrasepsi dan konsultasi dengan tenaga kesehatan.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResetHeaderToDefault}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 text-xs px-4"
+                  >
+                    Batal / Reset
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={savingHeader}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-6 shadow-sm"
+                  >
+                    {savingHeader ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                    ) : (
+                      <Check className="h-4 w-4 mr-1.5" />
+                    )}
+                    {savingHeader ? "Menyimpan..." : "Simpan Perubahan Header"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            {/* Pratinjau Tampilan Publik (Kanan: 5 Kolom) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Pratinjau Langsung
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100">
+                    Tampilan Publik (/kontrasepsi)
+                  </span>
+                </div>
+
+                {/* Simulasi Tampilan Persis Halaman Publik */}
+                <div className="p-5 bg-gradient-to-b from-slate-50/80 to-white rounded-xl border border-slate-100">
+                  <p className="text-xs font-bold text-blue-600 tracking-widest uppercase mb-3">
+                    {headerBadge || "INFO KONTRASEPSI"}
+                  </p>
+                  <h3 className="text-2xl font-extrabold text-slate-900 mb-3 leading-tight">
+                    {headerTitle || "Kenali pilihan kontrasepsi Anda"}
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {headerDescription || "Setiap metode punya cara kerja dan kelebihan masing-masing. Pelajari perbedaannya, lalu diskusikan dengan tenaga kesehatan untuk memilih yang paling cocok."}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <span>Hasil perubahan tersimpan permanen di database.</span>
+                  <a
+                    href="/kontrasepsi"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    Buka Tab Baru <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

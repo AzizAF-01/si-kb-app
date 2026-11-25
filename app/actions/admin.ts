@@ -129,3 +129,68 @@ export async function updateExistingUser(formData: FormData) {
     return { error: error.message };
   }
 }
+
+export async function saveContraceptiveHeader(header: {
+  badge: string;
+  title: string;
+  description: string;
+}) {
+  const badge = header.badge?.trim() || "Info Kontrasepsi";
+  const title = header.title?.trim() || "Kenali pilihan kontrasepsi Anda";
+  const description = header.description?.trim() || "";
+
+  const payload = {
+    name: "__HEADER_CONFIG__",
+    category: "__SYSTEM__",
+    how_it_works: JSON.stringify({ badge, title, description }),
+  };
+
+  try {
+    const supabase = await createServerClient();
+
+    // Cek apakah sudah ada data header di database
+    const { data: existing } = await supabase
+      .from("contraceptives")
+      .select("id")
+      .eq("name", "__HEADER_CONFIG__")
+      .maybeSingle();
+
+    let error: { message: string } | null = null;
+    if (existing) {
+      const res = await supabase
+        .from("contraceptives")
+        .update(payload)
+        .eq("id", existing.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("contraceptives").insert(payload);
+      error = res.error;
+    }
+
+    if (error) {
+      // Fallback menggunakan admin client jika service role key tersedia
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const adminClient = getAdminClient();
+        if (existing) {
+          const res = await adminClient
+            .from("contraceptives")
+            .update(payload)
+            .eq("id", existing.id);
+          if (res.error) throw res.error;
+        } else {
+          const res = await adminClient.from("contraceptives").insert(payload);
+          if (res.error) throw res.error;
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    revalidatePath("/kontrasepsi");
+    revalidatePath("/admin/contraceptives");
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal menyimpan teks header kontrasepsi.";
+    return { error: message };
+  }
+}
