@@ -220,9 +220,15 @@ export function UserManagement({
         </div>
       </div>
 
-      {/* Panel Form Tambah / Edit Pengguna (Collapsible) */}
-      {formMode !== null && (
-        <div className="mx-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Panel Form Tambah / Edit Pengguna (Collapsible dengan transisi halus) */}
+      <div
+        className={`mx-6 overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+          formMode !== null
+            ? "max-h-[850px] opacity-100"
+            : "max-h-0 opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
           <div className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-lg bg-red-50 text-red-600">
@@ -369,7 +375,7 @@ export function UserManagement({
             </div>
           </form>
         </div>
-      )}
+      </div>
 
       {/* Tabel Daftar Pengguna */}
       <div className="overflow-x-auto">

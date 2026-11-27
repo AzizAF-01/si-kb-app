@@ -184,7 +184,10 @@ export function PerawatChatDashboard({ perawatId }: { perawatId: string }) {
                 const time = new Date(msg.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
                 
                 return (
-                  <div key={msg.id} className={`flex ${isPerawat ? "justify-end" : "justify-start"}`}>
+                  <div 
+                    key={msg.id} 
+                    className={`flex ${isPerawat ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:animate-none`}
+                  >
                     <div className={`max-w-[70%] rounded-2xl px-5 py-3 shadow-sm ${
                       isPerawat 
                         ? "bg-slate-900 text-white rounded-tr-sm" 

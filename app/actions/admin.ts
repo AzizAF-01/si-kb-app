@@ -43,14 +43,24 @@ export async function createNewUser(formData: FormData) {
       if (authError) throw authError;
 
       if (authData.user) {
-        const { error: profileError } = await supabaseAdmin
+        const profilePayload = {
+          id: authData.user.id,
+          full_name: name,
+          role: role,
+          phone: phone,
+        };
+
+        let { error: profileError } = await supabaseAdmin
           .from("profiles")
-          .upsert({
-            id: authData.user.id,
-            full_name: name,
-            role: role,
-            phone: phone,
-          }, { onConflict: "id" });
+          .upsert(profilePayload, { onConflict: "id" });
+
+        if (profileError) {
+          const supabaseServer = await createServerClient();
+          const fallbackRes = await supabaseServer
+            .from("profiles")
+            .upsert(profilePayload, { onConflict: "id" });
+          profileError = fallbackRes.error;
+        }
 
         if (profileError) throw profileError;
       }
@@ -82,6 +92,8 @@ export async function createNewUser(formData: FormData) {
     }
 
     revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/konsultasi");
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
@@ -98,32 +110,58 @@ export async function updateExistingUser(formData: FormData) {
     return { error: "ID, Nama Lengkap, dan Peran wajib diisi." };
   }
 
+  const updatePayload = {
+    full_name: fullName,
+    role: role,
+    phone: phone,
+  };
+
   try {
-    // Gunakan Service Role jika ada, atau gunakan sesi Super Admin saat ini
-    const client = process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? getAdminClient()
-      : await createServerClient();
+    let data: any[] | null = null;
+    let lastError: any = null;
 
-    const { data, error } = await client
-      .from("profiles")
-      .update({
-        full_name: fullName,
-        role: role,
-        phone: phone,
-      })
-      .eq("id", id)
-      .select();
+    // 1. Coba gunakan Service Role terlebih dahulu jika tersedia
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const adminClient = getAdminClient();
+      const adminRes = await adminClient
+        .from("profiles")
+        .update(updatePayload)
+        .eq("id", id)
+        .select();
 
-    if (error) throw error;
+      if (!adminRes.error && adminRes.data && adminRes.data.length > 0) {
+        data = adminRes.data;
+      } else {
+        lastError = adminRes.error;
+      }
+    }
+
+    // 2. Fallback ke sesi Server Client (authenticated Admin) jika Service Role gagal / belum diberi GRANT
+    if (!data) {
+      const serverClient = await createServerClient();
+      const serverRes = await serverClient
+        .from("profiles")
+        .update(updatePayload)
+        .eq("id", id)
+        .select();
+
+      if (serverRes.error) {
+        throw serverRes.error;
+      }
+      data = serverRes.data;
+    }
 
     if (!data || data.length === 0) {
+      if (lastError) throw lastError;
       return {
         error:
-          "Gagal memperbarui profil. Pastikan kebijakan RLS tabel 'profiles' di Supabase mengizinkan Admin melakukan UPDATE.",
+          "Gagal memperbarui profil. Jalankan skrip SQL 'supabase/schema_profiles_admin.sql' di SQL Editor Supabase untuk memberikan izin UPDATE kepada Admin dan service_role.",
       };
     }
 
     revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/konsultasi");
     return { success: true };
   } catch (error: any) {
     return { error: error.message };

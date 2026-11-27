@@ -116,50 +116,54 @@ export function MobileNav() {
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
-      {isOpen && (
-        <>
-          {/* Overlay backdrop */}
-          <div 
-            className="fixed inset-0 top-16 bg-slate-900/30 backdrop-blur-xs z-40 transition-opacity"
-            onClick={() => setIsOpen(false)}
-          />
+      {/* Overlay backdrop dengan transisi buka-tutup halus */}
+      <div 
+        className={`fixed inset-0 top-16 bg-slate-900/30 backdrop-blur-xs z-40 transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsOpen(false)}
+      />
 
-          {/* Dropdown menu */}
-          <div className="fixed inset-x-0 top-16 bg-white border-b border-slate-200 shadow-xl z-50 p-4 animate-in slide-in-from-top-2 duration-200">
-            <div className="flex flex-col gap-1.5">
-              {USER_NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const isActive = isItemActive(item.href);
+      {/* Dropdown menu dengan transisi slide & fade terkoordinasi */}
+      <div 
+        className={`fixed inset-x-0 top-16 bg-white border-b border-slate-200 shadow-xl z-50 p-4 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] origin-top ${
+          isOpen 
+            ? "opacity-100 translate-y-0 scale-y-100 pointer-events-auto" 
+            : "opacity-0 -translate-y-2 scale-y-95 pointer-events-none"
+        }`}
+      >
+        <div className="flex flex-col gap-1.5">
+          {USER_NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = isItemActive(item.href);
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch={true}
-                    onClick={() => {
-                      setIsOpen(false);
-                      handleNavClick(item.href);
-                    }}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-colors ${
-                      isActive
-                        ? "bg-blue-50 text-blue-600 font-bold border border-blue-200/80 shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className={`h-5 w-5 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
-                      <span>{item.label}</span>
-                    </div>
-                    {isActive && (
-                      <span className="h-2 w-2 rounded-full bg-blue-600" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={true}
+                onClick={() => {
+                  setIsOpen(false);
+                  handleNavClick(item.href);
+                }}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-colors ${
+                  isActive
+                    ? "bg-blue-50 text-blue-600 font-bold border border-blue-200/80 shadow-xs"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className={`h-5 w-5 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
+                  <span>{item.label}</span>
+                </div>
+                {isActive && (
+                  <span className="h-2 w-2 rounded-full bg-blue-600" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

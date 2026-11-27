@@ -1,11 +1,44 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 import { 
   HeartPulse, Users, Clock, ShieldCheck, CheckCircle2, MessageCircle, 
   MapPin, BookOpen, Pill, Bell, History, ArrowRight
 } from "lucide-react";
 
-export default function HomePage() {
+function formatPerawatName(name: string) {
+  const trimmed = name.trim();
+  return /^perawat\b/i.test(trimmed) ? trimmed : `Perawat ${trimmed}`;
+}
+
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: perawatList } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("role", "perawat")
+    .order("created_at", { ascending: true });
+
+  const validPerawats = (perawatList || []).filter(
+    (p): p is { id: string; full_name: string } => Boolean(p.full_name?.trim())
+  );
+
+  const formattedNames = validPerawats.map((p) => formatPerawatName(p.full_name));
+
+  const onlinePerawatTitle =
+    formattedNames.length === 0
+      ? "Belum ada perawat yang aktif"
+      : formattedNames.length === 1
+      ? `${formattedNames[0]} sedang online`
+      : `${formattedNames.length} Perawat sedang online`;
+
+  const onlinePerawatSubtitle =
+    formattedNames.length <= 1
+      ? null
+      : formattedNames.length === 2
+      ? `${formattedNames[0]} & ${formattedNames[1]}`
+      : `${formattedNames[0]}, ${formattedNames[1]} & ${formattedNames.length - 2} lainnya`;
+
   return (
     <div className="flex flex-col gap-24 pb-24">
       {/* Hero Section */}
@@ -68,12 +101,22 @@ export default function HomePage() {
             </div>
             
             {/* Floating Badge 1 */}
-            <div className="absolute top-8 -right-4 md:-right-8 bg-white p-4 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-              <div className="bg-green-100 p-2 rounded-full">
+            <div className="absolute top-8 right-2 md:-right-8 max-w-[calc(100%-1rem)] sm:max-w-xs bg-white p-4 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+              <div className="bg-green-100 p-2 rounded-full shrink-0">
                 <MessageCircle className="h-5 w-5 text-green-600" />
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">Perawat Rina sedang online</p>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-900 truncate">
+                  {onlinePerawatTitle}
+                </p>
+                {onlinePerawatSubtitle && (
+                  <p
+                    className="text-xs text-slate-500 truncate mt-0.5"
+                    title={formattedNames.join(", ")}
+                  >
+                    {onlinePerawatSubtitle}
+                  </p>
+                )}
               </div>
             </div>
 

@@ -17,6 +17,7 @@ export function RiwayatList({ initialRecords }: { initialRecords: any[] }) {
   
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [removingIds, setRemovingIds] = useState<string[]>([]);
   
   const router = useRouter();
   const supabase = createClient();
@@ -61,15 +62,20 @@ export function RiwayatList({ initialRecords }: { initialRecords: any[] }) {
   const handleDelete = async (id: string) => {
     if (!confirm("Hapus catatan riwayat ini?")) return;
     setDeletingId(id);
+    setRemovingIds((prev) => [...prev, id]);
     
-    const { error } = await supabase.from("health_records").delete().eq("id", id);
-    
-    if (!error) {
-      router.refresh();
-    } else {
-      alert("Gagal menghapus: " + error.message);
-    }
-    setDeletingId(null);
+    // Beri waktu transisi keluar selama 200ms agar item menghilang secara halus
+    setTimeout(async () => {
+      const { error } = await supabase.from("health_records").delete().eq("id", id);
+      
+      if (!error) {
+        router.refresh();
+      } else {
+        alert("Gagal menghapus: " + error.message);
+        setRemovingIds((prev) => prev.filter((i) => i !== id));
+      }
+      setDeletingId(null);
+    }, 200);
   };
 
   if (!initialRecords || initialRecords.length === 0) {
@@ -109,7 +115,14 @@ export function RiwayatList({ initialRecords }: { initialRecords: any[] }) {
         }
 
         return (
-          <div key={record.id} className="flex gap-4 md:gap-6 group">
+          <div 
+            key={record.id} 
+            className={`flex gap-4 md:gap-6 group transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+              removingIds.includes(record.id)
+                ? "opacity-0 scale-95 -translate-x-2 max-h-0 overflow-hidden pointer-events-none my-0 py-0"
+                : "opacity-100"
+            }`}
+          >
             <div className="relative mt-2 shrink-0">
               <Circle className={`h-6 w-6 bg-slate-50 rounded-full transition-transform group-hover:scale-110 ${iconColor}`} />
             </div>
